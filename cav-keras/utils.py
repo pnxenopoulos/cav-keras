@@ -10,9 +10,10 @@ def returnModelLayer(model, layer):
     '''
     '''
     model_cut = Sequential()
+    model_post = Sequential()
     for l in range(0,layer+1):
         model_cut.add(model.layers[l])
-    return model_cut
+    return model_pre, model_post
 
 def returnLayerActivations(model_cut, x):
     '''
@@ -25,15 +26,15 @@ def trainLinearClassifier(activations, y_concept, opt):
     '''
     '''
     binary_linear_classifier = Sequential()
-    binary_linear_classifier.add(Dense(2, input_shape=activations.shape[1:], activation='softmax'))
-    binary_linear_classifier.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    binary_linear_classifier.add(Dense(1, input_shape=activations.shape[1:], activation='sigmoid', use_bias=False))
+    binary_linear_classifier.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
     binary_linear_classifier.fit(activations, y_concept, batch_size=32, epochs=10, shuffle=True, verbose=1)
     return binary_linear_classifier
 
 def conceptSensitivity(x, binary_linear_classifier, activations, cav_vector):
     '''
     '''
-    
+
 
 def prepCIFAR10(batch_size = 32, epochs = 20, optimizer = keras.optimizers.Adam(lr=0.001)):
     '''
