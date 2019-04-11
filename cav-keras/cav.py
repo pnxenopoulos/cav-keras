@@ -34,20 +34,20 @@ indx_to_use = [i for i, x in enumerate(indices) if x]
 x_test = x_test[indx_to_use]
 y_test = y_test[indx_to_use]
 
-# keep cloud (50) and sea (54) from CIFAR-100, these are the 
+# keep cloud (50) and sea (54) from CIFAR-100
 (x_train_concept, y_train_concept), (x_test_concept, y_test_concept) = cifar100.load_data()
 
-cloud = y_train_concept == [50]
-sea = y_train_concept == [54]
-indices = cloud + sea
+other = y_train_concept == [47]
+concept = y_train_concept == [54]
+indices = other + concept
 indx_to_use = [i for i, x in enumerate(indices) if x]
 
 x_train_concept = x_train_concept[indx_to_use]
 y_train_concept = y_train_concept[indx_to_use]
 
-cloud = y_test_concept == [50]
-sea = y_test_concept == [54]
-indices = cloud + sea
+other = y_test_concept == [47]  # 50 is cloud, 54 is sea
+concept = y_test_concept == [54]
+indices = other + concept
 indx_to_use = [i for i, x in enumerate(indices) if x]
 
 x_test_concept = x_test_concept[indx_to_use]
@@ -57,9 +57,18 @@ y_test_concept = y_test_concept[indx_to_use]
 y_train = np.where(y_train == 8, 1, y_train)
 y_test = np.where(y_test == 8, 1, y_test)
 
+# Make sure classes are 0,1
+y_train_concept = np.where(y_train_concept == 47, 0, y_train_concept)
+y_test_concept = np.where(y_test_concept == 47, 0, y_test_concept)
+y_train_concept = np.where(y_train_concept == 54, 1, y_train_concept)
+y_test_concept = np.where(y_test_concept == 54, 1, y_test_concept)
+
 # Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
+
+y_train_concept = keras.utils.to_categorical(y_train_concept, num_classes)
+y_test_concept = keras.utils.to_categorical(y_test_concept, num_classes)
 
 model = Sequential()
 model.add(Conv2D(32, (3, 3), padding='same',
@@ -84,10 +93,10 @@ model.add(Dropout(0.5))
 model.add(Dense(num_classes))
 model.add(Activation('sigmoid'))
 
-# initiate RMSprop optimizer
+# initiate optimizer
 opt = keras.optimizers.Adam(lr=0.001)
 
-# Let's train the model using RMSprop
+# train the model
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 x_train = x_train.astype('float32')
@@ -98,3 +107,24 @@ x_test /= 255
 model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test), shuffle=True)
 
 model2 = Sequential()
+model2.add(Conv2D(32, (3, 3), padding='same',
+                 input_shape=x_train.shape[1:], weights = model.layers[0].get_weights()))
+model2.add(Activation('relu'))
+model2.add(Conv2D(32, (3, 3), weights = model.layers[2].get_weights()))
+model2.add(Activation('relu'))
+model2.add(MaxPooling2D(pool_size=(2, 2)))
+model2.add(Dropout(0.25))
+
+model2.add(Conv2D(64, (3, 3), padding='same', weights = model.layers[6].get_weights()))
+model2.add(Activation('relu'))
+model2.add(Conv2D(64, (3, 3), weights = model.layers[8].get_weights()))
+model2.add(Activation('relu'))
+model2.add(MaxPooling2D(pool_size=(2, 2)))
+model2.add(Flatten())
+test = model2.predict(x_train_concept)
+
+classifier = Sequential()
+classifier.add(Dense(2, input_shape=test.shape[1:]))
+classifier.add(Activation('softmax'))
+classifier.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+classifier.fit(test, y_train_concept, batch_size=32, epochs=20, shuffle=True)
