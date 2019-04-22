@@ -10,7 +10,7 @@ import os
 # Set parameters
 batch_size = 32
 num_classes = 2
-epochs = 10
+epochs = 5
 num_predictions = 20
 model_name = 'keras_cifar10_trained_model.h5'
 
@@ -124,6 +124,27 @@ model2.add(Flatten())
 test = model2.predict(x_train_concept)
 
 classifier = Sequential()
-classifier.add(Dense(1, input_shape=test.shape[1:], activation='sigmoid', use_bias=False))
+classifier.add(Dense(2, input_shape=test.shape[1:], activation='sigmoid', use_bias=False))
 classifier.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 classifier.fit(test, y_train_concept, batch_size=32, epochs=20, shuffle=True)
+
+model_h = Sequential()
+model_h.add(Dense(512, input_shape=test.shape[1:], weights = model.layers[13].get_weights()))
+model_h.add(Activation('relu'))
+model_h.add(Dropout(0.5))
+model_h.add(Dense(num_classes, weights = model.layers[16].get_weights()))
+model_h.add(Activation('sigmoid'))
+
+item = x_train[0].reshape((1, 32, 32, 3))
+l_pred = model2.predict(item)
+l_pred[0]
+
+outputTensor = model_h.output 
+listOfVariableTensors = model_h.trainable_weights
+from keras import backend as k
+gradients = k.gradients(outputTensor, listOfVariableTensors)
+import tensorflow as tf
+sess = tf.InteractiveSession()
+sess.run(tf.initialize_all_variables())
+evaluated_gradients = sess.run(gradients,feed_dict={model_h.input:l_pred})
+
