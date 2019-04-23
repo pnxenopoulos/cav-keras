@@ -10,7 +10,7 @@ import os
 # Set parameters
 batch_size = 32
 num_classes = 2
-epochs = 5
+epochs = 3
 num_predictions = 20
 model_name = 'keras_cifar10_trained_model.h5'
 
@@ -148,3 +148,7 @@ sess = tf.InteractiveSession()
 sess.run(tf.initialize_all_variables())
 evaluated_gradients = sess.run(gradients,feed_dict={model_h.input:l_pred})
 
+z = np.reshape(l_pred[0], (1,2304))
+weights_list = model_h.trainable_weights
+gradients = k.gradients(model_h.output, model_h.input)
+f = k.function([model.input], gradients)
