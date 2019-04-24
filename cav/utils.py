@@ -30,8 +30,8 @@ def return_split_models(model, layer):
         model_h.add(model.layers[current_layer])
     return model_f, model_h
 
-def train_concept_classifier(model_f, x_concept, y_concept):
-    ''' Train the binary classifier for the concept
+def train_cav(model_f, x_concept, y_concept):
+    ''' Return the concept activation vector for the concept
 
     Parameters
     ----------
@@ -44,15 +44,16 @@ def train_concept_classifier(model_f, x_concept, y_concept):
 
     Returns
     -------
-    binary_classifier : (keras.engine.sequential.Sequential)
-        Binary classifier Keras model
+    cav : (numpy.ndarray)
+        Concept activation vector
     '''
     concept_activations = model_f.predict(x_concept)
     binary_classifier = Sequential()
-    binary_classifier.add(Dense(2, input_shape=concept_activations.shape[1:], activation='sigmoid'))
+    binary_classifier.add(Dense(1, input_shape=concept_activations.shape[1:], activation='sigmoid'))
     binary_classifier.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
     binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=20, shuffle=True)
-    return binary_classifier
+    cav = binary_concept_classifier.layers[0].get_weights()[0]
+    return cav
 
 def conceptual_sensitivity(example, model_f, model_h, concept_cav):
     ''' Return the conceptual conceptual sensitivity for a given example
@@ -104,12 +105,11 @@ def tcav_score(x_train, y_train, model, layer, x_concept, y_concept):
         TCAV score for given concept and class
     '''
     model_f, model_h = return_split_models(model, layer)
-    binary_concept_classifier = train_concept_classifier(model_f, x_concept, y_concept)
-    concept_cav = None
+    concept_cav = train_cav(model_f, x_concept, y_concept)
     unique_labels = np.unique(y_train)
     tcav = []
     for label in unique_labels:
-        training_subset = x_train[y_train == label]
+        training_subset = x_train[np.array(y_train) == 1]
         set_size = training_subset.shape[0]
         count_of_sensitivity = 0
         for example in training_subset:

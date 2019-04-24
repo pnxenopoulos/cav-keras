@@ -6,6 +6,9 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 import os
+import sys
+
+from ... import cav
 
 # Set parameters
 batch_size = 32
@@ -121,6 +124,7 @@ model2.add(Conv2D(64, (3, 3), weights = model.layers[8].get_weights()))
 model2.add(Activation('relu'))
 model2.add(MaxPooling2D(pool_size=(2, 2)))
 model2.add(Flatten())
+
 test = model2.predict(x_train_concept)
 
 classifier = Sequential()
