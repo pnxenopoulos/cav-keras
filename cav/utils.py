@@ -28,7 +28,7 @@ def return_split_models(model, layer):
         model_f.add(model.layers[current_layer])
     for current_layer in range(layer+1, len(model.layers)):
         model_h.add(model.layers[current_layer])
-    return [model_f, model_h]
+    return model_f, model_h
 
 def train_concept_classifier(model_f, x_concept, y_concept):
     ''' Train the binary classifier for the concept
@@ -79,3 +79,42 @@ def conceptual_sensitivity(example, model_f, model_h, concept_cav):
     calc_grad = gradient_func([model_f_activations])[0]
     sensitivity = np.dot(calc_grad, concept_cav)
     return sensitivity
+
+def tcav_score(x_train, y_train, model, layer, x_concept, y_concept):
+    ''' Returns the TCAV score for the training data to a given concept
+
+    Parameters
+    ----------
+    x_train : (numpy.ndarray)
+        Training data where the i-th entry as x_train[i] is one example
+    y_train : (numpy.ndarray)
+        Training labels where the i-th entry as y_train[i] is one example
+    model : (keras.engine.sequential.Sequential)
+        Trained model to use
+    layer : (int)
+        Integer specifying layer to split model on
+    x_concept : (numpy.ndarray)
+        Training data for concept set, has same size as model training data
+    y_concept : (numpy.ndarray)
+        Labels for concept set, has same size as model training labels
+
+    Returns
+    -------
+    tcav : (list)
+        TCAV score for given concept and class
+    '''
+    model_f, model_h = return_split_models(model, layer)
+    binary_concept_classifier = train_concept_classifier(model_f, x_concept, y_concept)
+    concept_cav = None
+    unique_labels = np.unique(y_train)
+    tcav = []
+    for label in unique_labels:
+        training_subset = x_train[y_train == label]
+        set_size = training_subset.shape[0]
+        count_of_sensitivity = 0
+        for example in training_subset:
+            sensitivity = conceptual_sensitivity(example, model_f, model_h, concept_cav)
+            if sensitivity > 0:
+                count_of_sensitivity = count_of_sensitivity + 1
+        tcav.append(count_of_sensitivity/set_size)
+    return tcav
