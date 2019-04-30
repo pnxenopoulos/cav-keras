@@ -76,7 +76,9 @@ def conceptual_sensitivity(example, model_f, model_h, concept_cav):
     sensitivity : (float32)
         Sensitivity for inputted examples
     '''
+    example = np.expand_dims(example, axis = 0)
     model_f_activations = model_f.predict(example)[0]
+    model_f_activations.shape = (1, model_h.input_shape[1])
     gradients = k.gradients(model_h.output, model_h.input)
     gradient_func = k.function([model_h.input], gradients)
     calc_grad = gradient_func([model_f_activations])[0]
