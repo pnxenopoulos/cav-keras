@@ -1,15 +1,11 @@
-import io
-import os
-import sys
-from shutil import rmtree
+from setuptools import setup
 
-from setuptools import find_packages, setup, Command
-
-# Package meta data
-NAME = 'cav-keras'
-DESCRIPTION = 'Concept activation vectors for Keras'
-URL = ''
-EMAIL = ''
-AUTHOR = ''
-REQUIRES_PYTHON = ''
-VERSION = None
+setup(name='cav',
+      version='0.1',
+      description='Concept activation vectors for keras',
+      url='https://github.com/pnxenopoulos/cav-keras',
+      author='Peter Xenopoulos',
+      author_email='xenopoulos@nyu.edu',
+      license='MIT',
+      packages=['cav'],
+      zip_safe=False)
