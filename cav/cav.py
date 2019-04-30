@@ -1,162 +1,122 @@
+''' Utilities for concept activation vectors '''
 import numpy as np
-import keras
-from keras.datasets import cifar10, cifar100
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
-import os
-import sys
 
-from ... import cav
-
-# Set parameters
-batch_size = 32
-num_classes = 2
-epochs = 3
-num_predictions = 20
-model_name = 'keras_cifar10_trained_model.h5'
-
-# The data, split between train and test sets:
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
-
-# Keep airplanes (0) and ships (8) from CIFAR-10
-airplanes = y_train == [0]
-ships = y_train == [8]
-indices = airplanes + ships
-indx_to_use = [i for i, x in enumerate(indices) if x]
-
-x_train = x_train[indx_to_use]
-y_train = y_train[indx_to_use]
-
-airplanes = y_test == [0]
-ships = y_test == [8]
-indices = airplanes + ships
-indx_to_use = [i for i, x in enumerate(indices) if x]
-
-x_test = x_test[indx_to_use]
-y_test = y_test[indx_to_use]
-
-# keep cloud (50) and sea (54) from CIFAR-100
-(x_train_concept, y_train_concept), (x_test_concept, y_test_concept) = cifar100.load_data()
-
-other = y_train_concept == [47]
-concept = y_train_concept == [54]
-indices = other + concept
-indx_to_use = [i for i, x in enumerate(indices) if x]
-
-x_train_concept = x_train_concept[indx_to_use]
-y_train_concept = y_train_concept[indx_to_use]
-
-other = y_test_concept == [47]  # 50 is cloud, 54 is sea
-concept = y_test_concept == [54]
-indices = other + concept
-indx_to_use = [i for i, x in enumerate(indices) if x]
-
-x_test_concept = x_test_concept[indx_to_use]
-y_test_concept = y_test_concept[indx_to_use]
-
-# Make sure classes are 0,1
-y_train = np.where(y_train == 8, 1, y_train)
-y_test = np.where(y_test == 8, 1, y_test)
-
-# Make sure classes are 0,1
-y_train_concept = np.where(y_train_concept == 47, 0, y_train_concept)
-y_test_concept = np.where(y_test_concept == 47, 0, y_test_concept)
-y_train_concept = np.where(y_train_concept == 54, 1, y_train_concept)
-y_test_concept = np.where(y_test_concept == 54, 1, y_test_concept)
-
-# Convert class vectors to binary class matrices.
-y_train = keras.utils.to_categorical(y_train, num_classes)
-y_test = keras.utils.to_categorical(y_test, num_classes)
-
-y_train_concept = keras.utils.to_categorical(y_train_concept, num_classes)
-y_test_concept = keras.utils.to_categorical(y_test_concept, num_classes)
-
-model = Sequential()
-model.add(Conv2D(32, (3, 3), padding='same',
-                 input_shape=x_train.shape[1:]))
-model.add(Activation('relu'))
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(Activation('relu'))
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Flatten())
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(num_classes))
-model.add(Activation('sigmoid'))
-
-# initiate optimizer
-opt = keras.optimizers.Adam(lr=0.001)
-
-# train the model
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
-
-model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test), shuffle=True)
-
-model2 = Sequential()
-model2.add(Conv2D(32, (3, 3), padding='same',
-                 input_shape=x_train.shape[1:], weights = model.layers[0].get_weights()))
-model2.add(Activation('relu'))
-model2.add(Conv2D(32, (3, 3), weights = model.layers[2].get_weights()))
-model2.add(Activation('relu'))
-model2.add(MaxPooling2D(pool_size=(2, 2)))
-model2.add(Dropout(0.25))
-
-model2.add(Conv2D(64, (3, 3), padding='same', weights = model.layers[6].get_weights()))
-model2.add(Activation('relu'))
-model2.add(Conv2D(64, (3, 3), weights = model.layers[8].get_weights()))
-model2.add(Activation('relu'))
-model2.add(MaxPooling2D(pool_size=(2, 2)))
-model2.add(Flatten())
-
-test = model2.predict(x_train_concept)
-
-classifier = Sequential()
-classifier.add(Dense(2, input_shape=test.shape[1:], activation='sigmoid', use_bias=True))
-classifier.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-classifier.fit(test, y_train_concept, batch_size=32, epochs=15, shuffle=True)
-
-model_h = Sequential()
-model_h.add(Dense(512, input_shape=test.shape[1:], weights = model.layers[13].get_weights()))
-model_h.add(Activation('relu'))
-model_h.add(Dropout(0.5))
-model_h.add(Dense(num_classes, weights = model.layers[16].get_weights()))
-model_h.add(Activation('sigmoid'))
-
-item = x_train[0].reshape((1, 32, 32, 3))
-l_pred = model2.predict(item)
-l_pred[0]
-
-outputTensor = model_h.output
-listOfVariableTensors = model_h.trainable_weights
 from keras import backend as k
-gradients = k.gradients(outputTensor, listOfVariableTensors)
-import tensorflow as tf
-sess = tf.InteractiveSession()
-sess.run(tf.initialize_all_variables())
-evaluated_gradients = sess.run(gradients,feed_dict={model_h.input:l_pred})
+from keras.models import Sequential
+from keras.layers import Dense, InputLayer
+from keras.optimizers import Adam
 
-z = l_pred[0].reshape((1,2304))
-weights_list = model_h.trainable_weights
-gradients = k.gradients(model_h.output, model_h.input)
-f = k.function([model_h.input], gradients)
+def return_split_models(model, layer):
+    ''' Split a model into model_f and model_h
 
-q = f([z])[0]
-w = classifier.layers[0].get_weights()[0][:,1]
-np.dot(q,w)
+    Parameters
+    ----------
+    model : (keras.engine.sequential.Sequential)
+        Keras sequential model to split
+    layer : (int)
+        Integer specifying layer to split model on
+
+    Returns
+    -------
+    model_f : (keras.engine.sequential.Sequential)
+        Keras sequential model that is the first part
+    model_h : (keras.engine.sequential.Sequential)
+        Keras sequential model that is the second part
+    '''
+    model_f, model_h = Sequential(), Sequential()
+    for current_layer in range(0, layer+1):
+        model_f.add(model.layers[current_layer])
+    # Write input layer for model_h
+    model_h.add(InputLayer(input_shape=model.layers[layer+1].input_shape[1:]))
+    for current_layer in range(layer+1, len(model.layers)):
+        model_h.add(model.layers[current_layer])
+    return model_f, model_h
+
+def train_cav(model_f, x_concept, y_concept):
+    ''' Return the concept activation vector for the concept
+
+    Parameters
+    ----------
+    model_f : (keras.engine.sequential.Sequential)
+        First Keras sequential model from return_split_models()
+    x_concept : (numpy.ndarray)
+        Training data for concept set, has same size as model training data
+    y_concept : (numpy.ndarray)
+        Labels for concept set, has same size as model training labels
+
+    Returns
+    -------
+    cav : (numpy.ndarray)
+        Concept activation vector
+    '''
+    concept_activations = model_f.predict(x_concept)
+    binary_classifier = Sequential()
+    binary_classifier.add(Dense(1, input_shape=concept_activations.shape[1:], activation='sigmoid'))
+    binary_classifier.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
+    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=20, shuffle=True)
+    cav = binary_classifier.layers[0].get_weights()[0]
+    return cav
+
+def conceptual_sensitivity(example, model_f, model_h, concept_cav):
+    ''' Return the conceptual conceptual sensitivity for a given example
+
+    Parameters
+    ----------
+    example : (numpy.ndarray)
+        Example to calculate the concept sensitivity (be sure to reshape)
+    model_f : (keras.engine.sequential.Sequential)
+        First Keras sequential model from return_split_models()
+    model_h : (keras.engine.sequential.Sequential)
+        Second Keras sequential model from return_split_models()
+    concept_cav : (numpy.ndarray)
+        Numpy array with the linear concept activation vector for a given concept
+
+    Returns
+    -------
+    sensitivity : (float32)
+        Sensitivity for inputted examples
+    '''
+    model_f_activations = model_f.predict(example)[0]
+    gradients = k.gradients(model_h.output, model_h.input)
+    gradient_func = k.function([model_h.input], gradients)
+    calc_grad = gradient_func([model_f_activations])[0]
+    sensitivity = np.dot(calc_grad, concept_cav)
+    return sensitivity
+
+def tcav_score(x_train, y_train, model, layer, x_concept, y_concept):
+    ''' Returns the TCAV score for the training data to a given concept
+
+    Parameters
+    ----------
+    x_train : (numpy.ndarray)
+        Training data where the i-th entry as x_train[i] is one example
+    y_train : (numpy.ndarray)
+        Training labels where the i-th entry as y_train[i] is one example
+    model : (keras.engine.sequential.Sequential)
+        Trained model to use
+    layer : (int)
+        Integer specifying layer to split model on
+    x_concept : (numpy.ndarray)
+        Training data for concept set, has same size as model training data
+    y_concept : (numpy.ndarray)
+        Labels for concept set, has same size as model training labels
+
+    Returns
+    -------
+    tcav : (list)
+        TCAV score for given concept and class
+    '''
+    model_f, model_h = return_split_models(model, layer)
+    concept_cav = train_cav(model_f, x_concept, y_concept)
+    unique_labels = np.unique(y_train)
+    tcav = []
+    for label in unique_labels:
+        training_subset = x_train[np.array(y_train) == 1]
+        set_size = training_subset.shape[0]
+        count_of_sensitivity = 0
+        for example in training_subset:
+            sensitivity = conceptual_sensitivity(example, model_f, model_h, concept_cav)
+            if sensitivity > 0:
+                count_of_sensitivity = count_of_sensitivity + 1
+        tcav.append(count_of_sensitivity/set_size)
+    return tcav
