@@ -57,13 +57,13 @@ def train_cav(model_f, x_concept, y_concept):
     cav = binary_classifier.layers[0].get_weights()[0]
     return cav
 
-def conceptual_sensitivity(example, model_f, model_h, concept_cav):
+def conceptual_sensitivity(examples, model_f, model_h, concept_cav):
     ''' Return the conceptual conceptual sensitivity for a given example
 
     Parameters
     ----------
-    example : (numpy.ndarray)
-        Example to calculate the concept sensitivity (be sure to reshape)
+    examples : (numpy.ndarray)
+        Examples to calculate the concept sensitivity (be sure to reshape)
     model_f : (keras.engine.sequential.Sequential)
         First Keras sequential model from return_split_models()
     model_h : (keras.engine.sequential.Sequential)
@@ -73,12 +73,10 @@ def conceptual_sensitivity(example, model_f, model_h, concept_cav):
 
     Returns
     -------
-    sensitivity : (float32)
-        Sensitivity for inputted examples
+    sensitivity : (numpy.ndarray)
+        Array of sensitivities for specified examples
     '''
-    example = np.expand_dims(example, axis = 0)
-    model_f_activations = model_f.predict(example)[0]
-    model_f_activations.shape = (1, model_h.input_shape[1])
+    model_f_activations = model_f.predict(examples)
     gradients = k.gradients(model_h.output, model_h.input)
     gradient_func = k.function([model_h.input], gradients)
     calc_grad = gradient_func([model_f_activations])[0]
