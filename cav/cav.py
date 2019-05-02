@@ -53,7 +53,7 @@ def train_cav(model_f, x_concept, y_concept):
     binary_classifier = Sequential()
     binary_classifier.add(Dense(1, input_shape=concept_activations.shape[1:], activation='sigmoid'))
     binary_classifier.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
-    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=20, shuffle=True)
+    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=2, shuffle=True)
     cav = binary_classifier.layers[0].get_weights()[0]
     return cav
 
