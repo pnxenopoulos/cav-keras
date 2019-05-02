@@ -37,7 +37,7 @@ class TestModelSplit(unittest.TestCase):
         model_f, model_h = return_split_models(model, 2)
         self.assertEqual(model_h.input_shape, (None, 30))
 
-class TestBinaryClassifier(unittest.TestCase):
+class TestCAV(unittest.TestCase):
     ''' Tests for CAV function
     '''
     def test_dimensions(self):
@@ -71,6 +71,25 @@ class TestBinaryClassifier(unittest.TestCase):
         cav = train_cav(model_f, x_concept, y_concept)
         cav_rounded = np.round(cav)
         self.assertEqual(np.sum(np.array([[-1], [0], [0]]) == cav_rounded), 3)
+
+class TestSensitivity(unittest.TestCase):
+    ''' Tests for calculating sensitivity to a concept
+    '''
+    def test_values(self):
+        np.random.seed(1996)
+        model = Sequential()
+        model.add(Dense(5, kernel_initializer=Constant(value=9), input_dim = 5))
+        model.add(Dense(4, kernel_initializer=Constant(value=9)))
+        model.add(Dense(3, kernel_initializer=Constant(value=9)))
+        model.add(Dense(2, kernel_initializer=Constant(value=9)))
+        model.add(Dense(1, kernel_initializer=Constant(value=9)))
+        model_f, model_h = return_split_models(model, 2)
+        x_concept = np.array([[6,7,8,9,10], [5,6,7,8,9], [1,2,3,4,5], [2,3,4,5,6]])
+        y_concept = [1, 1, 0, 0]
+        x_train = np.array([[1,2,3,4,5], [6,7,8,9,10]])
+        cav = train_cav(model_f, x_concept, y_concept)
+        sensitivities = conceptual_sensitivity(x_train, model_f, model_h, cav)
+        self.assertEqual(sensitivities.shape[0], 2)
 
 if __name__ == '__main__':
     unittest.main()
