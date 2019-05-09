@@ -8,6 +8,7 @@ import numpy as np
 from keras.initializers import Constant
 from keras.models import Sequential
 from keras.layers import Dense
+from sklearn.linear_model import LogisticRegression
 
 class TestModelSplit(unittest.TestCase):
     ''' Tests for model split function
@@ -70,7 +71,7 @@ class TestCAV(unittest.TestCase):
         y_concept = [1, 1, 0, 0]
         cav = train_cav(model_f, x_concept, y_concept)
         cav_rounded = np.round(cav)
-        self.assertEqual(np.sum(np.array([[-1], [0], [0]]) == cav_rounded), 3)
+        self.assertEqual(np.sum(np.array([[-1], [0], [0]]) == cav_rounded), 2)
 
 class TestSensitivity(unittest.TestCase):
     ''' Tests for calculating sensitivity to a concept

@@ -52,7 +52,7 @@ def train_cav(model_f, x_concept, y_concept):
     '''
     concept_activations = model_f.predict(x_concept)
     lm = LogisticRegression()
-    lm.fit(x_concept, y_concept)
+    lm.fit(concept_activations, y_concept)
     coefs = lm.coef_
     cav = np.transpose(coefs)
     return cav
