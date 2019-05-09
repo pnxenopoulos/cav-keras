@@ -53,7 +53,7 @@ def train_cav(model_f, x_concept, y_concept):
     binary_classifier = Sequential()
     binary_classifier.add(Dense(1, input_shape=concept_activations.shape[1:], activation='sigmoid'))
     binary_classifier.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
-    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=2, shuffle=True)
+    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=1, shuffle=True)
     cav = binary_classifier.layers[0].get_weights()[0]
     return cav
 
@@ -120,3 +120,29 @@ def tcav_score(x_train, y_train, model, layer, x_concept, y_concept):
                 count_of_sensitivity = count_of_sensitivity + 1
         tcav.append(count_of_sensitivity/set_size)
     return tcav
+
+def create_counterexamples(n = 500, height = 32, width = 32, channels = 3):
+    ''' Returns a list of counterexamples given from the concept training set
+
+    Parameters
+    ----------
+    n : (int)
+        Number of counterexamples to generate
+    height : (int)
+        Height of image of counterexamples
+    width : (int)
+        Width of image of counterexamples
+    channels : (int)
+        Number of channels to generate
+
+    Returns
+    -------
+    counterexamples : (list)
+        Array of counterexamples
+    '''
+    counterexamples = []
+    for i in range(0,n):
+        image = np.random.rand(height, width, channels) * 255
+        counterexamples.append(image)
+    counterexamples = np.array(counterexamples)
+    return counterexamples
