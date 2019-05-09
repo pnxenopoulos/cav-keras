@@ -5,6 +5,7 @@ from keras import backend as k
 from keras.models import Sequential
 from keras.layers import Dense, InputLayer
 from keras.optimizers import Adam
+from sklearn.linear_model import LogisticRegression
 
 def return_split_models(model, layer):
     ''' Split a model into model_f and model_h
@@ -50,11 +51,10 @@ def train_cav(model_f, x_concept, y_concept):
         Concept activation vector
     '''
     concept_activations = model_f.predict(x_concept)
-    binary_classifier = Sequential()
-    binary_classifier.add(Dense(1, input_shape=concept_activations.shape[1:], activation='sigmoid'))
-    binary_classifier.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
-    binary_classifier.fit(concept_activations, y_concept, batch_size=32, epochs=1, shuffle=True)
-    cav = binary_classifier.layers[0].get_weights()[0]
+    lm = LogisticRegression()
+    lm.fit(x_concept, y_concept)
+    coefs = lm.coef_
+    cav = np.transpose(coefs)
     return cav
 
 def conceptual_sensitivity(examples, model_f, model_h, concept_cav):
