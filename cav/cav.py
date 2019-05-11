@@ -142,7 +142,7 @@ def create_counterexamples(n = 500, height = 32, width = 32, channels = 3):
     '''
     counterexamples = []
     for i in range(0,n):
-        image = np.random.rand(height, width, channels) * 255
+        image = np.rint(np.random.rand(height, width, channels) * 255)
         counterexamples.append(image)
     counterexamples = np.array(counterexamples)
     return counterexamples
