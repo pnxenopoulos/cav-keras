@@ -5,7 +5,7 @@ from keras import backend as k
 from keras.models import Sequential
 from keras.layers import Dense, InputLayer
 from keras.optimizers import Adam
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 
 def return_split_models(model, layer):
     ''' Split a model into model_f and model_h
@@ -51,7 +51,7 @@ def train_cav(model_f, x_concept, y_concept):
         Concept activation vector
     '''
     concept_activations = model_f.predict(x_concept)
-    lm = LogisticRegression()
+    lm = SGDClassifier()
     lm.fit(concept_activations, y_concept)
     coefs = lm.coef_
     cav = np.transpose(coefs)
