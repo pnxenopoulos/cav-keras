@@ -1,5 +1,6 @@
 ''' Utilities for concept activation vectors '''
 import numpy as np
+import tensorflow as tf
 
 from keras import backend as k
 from keras.models import Sequential
@@ -57,13 +58,15 @@ def train_cav(model_f, x_concept, y_concept):
     cav = np.transpose(coefs)
     return cav
 
-def conceptual_sensitivity(examples, model_f, model_h, concept_cav, y_train):
+def conceptual_sensitivity(examples, example_labels, model_f, model_h, concept_cav):
     ''' Return the conceptual conceptual sensitivity for a given example
 
     Parameters
     ----------
     examples : (numpy.ndarray)
         Examples to calculate the concept sensitivity (be sure to reshape)
+    example_labels : (numpy.ndarray)
+        Corresponding example labels
     model_f : (keras.engine.sequential.Sequential)
         First Keras sequential model from return_split_models()
     model_h : (keras.engine.sequential.Sequential)
@@ -77,8 +80,11 @@ def conceptual_sensitivity(examples, model_f, model_h, concept_cav, y_train):
         Array of sensitivities for specified examples
     '''
     model_f_activations = model_f.predict(examples)
-    gradients = k.gradients(model_h.output, model_h.input)
-    gradient_func = k.function([model_h.input], gradients)
+    reshaped_labels = np.array(example_labels).reshape((examples.shape[0],1))
+    tf_example_labels = tf.convert_to_tensor(reshaped_labels)
+    loss = k.mean(k.binary_crossentropy(tf_example_labels, model_h.output))
+    grad = k.gradients(loss, model_h.input)
+    gradient_func = k.function([model_h.input], grad)
     calc_grad = gradient_func([model_f_activations])[0]
     sensitivity = np.dot(calc_grad, concept_cav)
     return sensitivity
