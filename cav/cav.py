@@ -52,7 +52,7 @@ def train_cav(model_f, x_concept, y_concept):
         Concept activation vector
     '''
     concept_activations = model_f.predict(x_concept)
-    lm = SGDClassifier(loss = "perceptron", eta0=  1, learning_rate = "constant", penalty = None)
+    lm = SGDClassifier(loss="perceptron", eta0=1, learning_rate="constant", penalty=None)
     lm.fit(concept_activations, y_concept)
     coefs = lm.coef_
     cav = np.transpose(-1 * coefs)
@@ -82,7 +82,7 @@ def conceptual_sensitivity(examples, example_labels, model_f, model_h, concept_c
     model_f_activations = model_f.predict(examples)
     reshaped_labels = np.array(example_labels).reshape((examples.shape[0], 1))
     tf_example_labels = tf.convert_to_tensor(reshaped_labels, dtype=np.float32)
-    loss = k.mean(k.binary_crossentropy(tf_example_labels, model_h.output))
+    loss = k.binary_crossentropy(tf_example_labels, model_h.output)
     grad = k.gradients(loss, model_h.input)
     gradient_func = k.function([model_h.input], grad)
     calc_grad = gradient_func([model_f_activations])[0]
