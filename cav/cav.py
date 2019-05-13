@@ -57,7 +57,7 @@ def train_cav(model_f, x_concept, y_concept):
     cav = np.transpose(coefs)
     return cav
 
-def conceptual_sensitivity(examples, model_f, model_h, concept_cav):
+def conceptual_sensitivity(examples, model_f, model_h, concept_cav, y_train):
     ''' Return the conceptual conceptual sensitivity for a given example
 
     Parameters
