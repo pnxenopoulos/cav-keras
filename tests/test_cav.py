@@ -8,7 +8,7 @@ import numpy as np
 from keras.initializers import Constant
 from keras.models import Sequential
 from keras.layers import Dense
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 
 class TestModelSplit(unittest.TestCase):
     ''' Tests for model split function
@@ -71,7 +71,7 @@ class TestCAV(unittest.TestCase):
         y_concept = [1, 1, 0, 0]
         cav = train_cav(model_f, x_concept, y_concept)
         cav_rounded = np.round(cav)
-        self.assertEqual(np.sum(np.array([[-1], [0], [0]]) == cav_rounded), 2)
+        self.assertEqual(np.sum(np.array([[-437400], [-437400], [-437400]]) == cav_rounded), 3)
 
 class TestSensitivity(unittest.TestCase):
     ''' Tests for calculating sensitivity to a concept
@@ -88,8 +88,10 @@ class TestSensitivity(unittest.TestCase):
         x_concept = np.array([[6,7,8,9,10], [5,6,7,8,9], [1,2,3,4,5], [2,3,4,5,6]])
         y_concept = [1, 1, 0, 0]
         x_train = np.array([[1,2,3,4,5], [6,7,8,9,10]])
+        y_train = [0, 1]
         cav = train_cav(model_f, x_concept, y_concept)
-        sensitivities = conceptual_sensitivity(x_train, model_f, model_h, cav)
+        sensitivities = conceptual_sensitivity(x_train, y_train, model_f, model_h, cav)
+        print(sensitivities)
         self.assertEqual(sensitivities.shape[0], 2)
 
 if __name__ == '__main__':
