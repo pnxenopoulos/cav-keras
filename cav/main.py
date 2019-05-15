@@ -11,10 +11,12 @@ class TCAV():
     ''' Class for concept activation vectors for Keras models.
 
     Attributes:
-        model: A 'Sequential' Keras model
-        model_f: A 'Sequential' Keras model that is the first half of 'model'
-        model_h: A 'Sequential' Keras model that is the second half of 'model'
+        model: A Sequential Keras model
+        model_f: A Sequential Keras model that is the first half of model
+        model_h: A Sequential Keras model that is the second half of model
         cav: A numpy array containing the concept activation vector
+        sensitivity: A numpy array containing sensitivities
+        y_labels: A numpy array containing class labels
     '''
     def __init__(self, model = None):
         ''' Initialize the class with empty variables
@@ -23,6 +25,18 @@ class TCAV():
         self.model_f = None
         self.model_h = None
         self.cav = None
+        self.sensitivity = None
+        self.y_labels = None
+    def set_model(self, model = None):
+        ''' Function to set the model for the TCAV object
+
+        Args:
+            model: A Keras 'Sequential' model
+
+        Raises:
+            ValueError: If the model is not of the Keras Sequential type
+        '''
+        self.model = model
     def split_model(self, bottleneck, conv_layer = True):
         ''' Split the model on a given bottleneck layer
 
@@ -83,7 +97,7 @@ class TCAV():
         x_train_concept = np.append(x_concept, counterexamples, axis = 0)
         y_train_concept = np.repeat([1, 0], [x_concept.shape[0]], axis = 0)
         concept_activations = self.model_f.predict(x_train_concept)
-        lm = SGDClassifier(loss="perceptron", eta0=1, learning_rate="constant", penalty=None)
+        lm = SGDClassifier(loss = 'perceptron', eta0 = 1, learning_rate = 'constant', penalty = None)
         lm.fit(concept_activations, y_train_concept)
         coefs = lm.coef_
         self.cav = np.transpose(-1 * coefs)
@@ -93,9 +107,6 @@ class TCAV():
         Args:
             x_train: A numpy array of the training data
             y_train: A numpy array of the training labels
-
-        Returns:
-            sensitivity: A vector of the sensitivities
         '''
         model_f_activations = self.model_f.predict(x_train)
         reshaped_labels = np.array(y_train).reshape((x_train.shape[0], 1))
@@ -105,4 +116,12 @@ class TCAV():
         gradient_func = k.function([self.model_h.input], grad)
         calc_grad = gradient_func([model_f_activations])[0]
         sensitivity = np.dot(calc_grad, self.cav)
-        return sensitivity
+        self.sensitivity = sensitivity
+        self.y_labels = y_train
+    def print_sensitivity(self):
+        ''' Print the sensitivities in a readable way
+        '''
+        if type(self.y_labels) == list:
+            self.y_labels = np.array(self.y_labels)
+        print('The sensitivity of class 1 is ', str(np.sum(self.sensitivity[np.where(self.y_labels == 1)[0]]>0)/np.where(self.y_labels == 1)[0].shape[0]))
+        print('The sensitivity of class 0 is ', str(np.sum(self.sensitivity[np.where(self.y_labels == 0)[0]]>0)/np.where(self.y_labels == 1)[0].shape[0]))
