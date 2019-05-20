@@ -21,7 +21,7 @@ class TCAV():
     def __init__(self, model = None):
         ''' Initialize the class with empty variables
         '''
-        self.model = None
+        self.model = model
         self.model_f = None
         self.model_h = None
         self.cav = None
