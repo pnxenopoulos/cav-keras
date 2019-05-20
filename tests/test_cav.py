@@ -44,5 +44,11 @@ class TestTCAV(unittest.TestCase):
         self.assertIsInstance(self.tcav.model_f, Sequential)
         self.assertIsInstance(self.tcav.model_h, Sequential)
 
+    def testSplitModelErrors(self):
+        ''' Test model splitting errors
+        '''
+        with self.assertRaises(ValueError):
+            self.tcav.split_model(bottleneck = -1, conv_layer = False)
+
 if __name__ == '__main__':
     unittest.main()

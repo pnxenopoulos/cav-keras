@@ -50,6 +50,7 @@ class TCAV():
 
         Raises:
             ValueError: If the bottleneck layer value is less than 0 or greater than the total number of layers
+            Warning: If the bottleneck layer is a convolutional layer
         '''
         if bottleneck < 0 or bottleneck >= len(self.model.layers):
             raise ValueError('Bottleneck layer must be greater than or equal to 0 and less than the number of layers!')
