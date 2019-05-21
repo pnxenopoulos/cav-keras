@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from context import *
-from cav.main import TCAV
+from cav.tcav import TCAV
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation
