@@ -16,6 +16,7 @@ class TCAV():
         model_h: A Sequential Keras model that is the second half of model
         cav: A numpy array containing the concept activation vector
         sensitivity: A numpy array containing sensitivities
+        tcav_score: A list of the TCAV scores for the classes
         y_labels: A numpy array containing class labels
     '''
     def __init__(self, model = None):
@@ -26,6 +27,7 @@ class TCAV():
         self.model_h = None
         self.cav = None
         self.sensitivity = None
+        self.tcav_score = []
         self.y_labels = None
     def set_model(self, model = None):
         ''' Function to set the model for the TCAV object
@@ -125,4 +127,4 @@ class TCAV():
         if type(self.y_labels) == list:
             self.y_labels = np.array(self.y_labels)
         print('The sensitivity of class 1 is ', str(np.sum(self.sensitivity[np.where(self.y_labels == 1)[0]]>0)/np.where(self.y_labels == 1)[0].shape[0]))
-        print('The sensitivity of class 0 is ', str(np.sum(self.sensitivity[np.where(self.y_labels == 0)[0]]>0)/np.where(self.y_labels == 1)[0].shape[0]))
+        print('The sensitivity of class 0 is ', str(np.sum(self.sensitivity[np.where(self.y_labels == 0)[0]]>0)/np.where(self.y_labels == 0)[0].shape[0]))
