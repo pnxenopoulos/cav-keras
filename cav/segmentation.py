@@ -7,7 +7,7 @@ from skimage.segmentation import mark_boundaries
 from sklearn.cluster import KMeans
 
 
-class ImageSegmentation:
+class ImageSegmentation(object):
     """ Class for creating segmented images
 
     Attributes:

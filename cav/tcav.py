@@ -8,7 +8,7 @@ from keras.layers import InputLayer, Reshape, Flatten
 from sklearn.linear_model import SGDClassifier
 
 
-class TCAV:
+class TCAV(object):
     """ Class for concept activation vectors for Keras models.
 
     Attributes:
